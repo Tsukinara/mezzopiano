@@ -1,0 +1,58 @@
+% format:
+% A-BTSQ-C : (DOL-E)(DOL-E)(DOL-E)...etc
+% A - index of root of harmonization chord (0-11)
+% B - 0 or 7, if the chord is a seventh
+% T - D, T, or Q for duple, triple, or quadruple time
+% S - B or T for bass or treble line
+% Q - M, m, or d, for major, minor, or diminished
+% C - index of first note of next sequence, or 0 if arbitrary
+% D - index of note relative to key
+% O - octave of note (above 4 for treble, above 2 for bass)
+% E - beat index, should not be greater than 4*12 for quadruple time
+%		0, 12, 24, and 36 are the main subdivisions
+%		each multiple of 6 is an eight note (assuming 4/4)
+%		each multiple of 3 is a sixteenth note
+%		each multiple of 4 is a triplet
+% L - note length, using same indexing system as above
+
+%% MAJOR HARMONIES
+% I chord
+
+0-0QTM-2 : (414-0)(014-4)(704-8)(414-12)(014-16)(704-20)(514-24)(014-28)(704-32)(414-36)(014-40)(704-44)
+0-0QTM-7 : (414-0)(014-4)(704-8)(414-12)(014-16)(704-20)(514-24)(014-28)(704-32)(414-36)(014-40)(514-44)
+
+0-0QBM-0 : (006-0)(706-6)(016-12)(706-18)(216-24)(706-30)(016-36)(706-42)
+
+% ii chord
+
+% iii chord
+
+
+% IV chord
+
+% iv chord
+
+% V chord
+
+% V7 chord
+
+% vi chord
+
+% vii dim chord
+
+% V/vi chord
+
+% V/ii chord
+
+% V/IV chord
+
+% V/V chord
+
+% CAD64
+
+% b VII chord
+
+% b VI chord
+
+
+%% MINOR HARMONIES
