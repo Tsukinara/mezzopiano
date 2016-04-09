@@ -74,11 +74,11 @@ public class Menu {
 	}
 	
 	private void transition_in(Graphics2D g) {
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 		g.setColor(new Color(255, 255, 255, alpha));
 		g.fillRect(sX(0), sY(0), sW(1920), sH(1080));
 		
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 		
 		g.setColor(parent.bg_color);
 		g.fillRect(sX(0), sY(0), sW(1920), sH(this.bar_height));
@@ -115,7 +115,7 @@ public class Menu {
 	}
 	
 	private void opt_select(Graphics2D g) {
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 		g.setColor(new Color(222, 238, 246, 200));
 		g.fillRect(sX(finXL), sY(box_y), sW(box_w), sH(box_h));
 		
@@ -176,7 +176,7 @@ public class Menu {
 			fw = fm.stringWidth(opts[i]);
 			g.drawString(opts[i], (sX(1920)-fw)/2, sY(opt_y[i]));
 		}
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 	}
 	
 	private void transition_back(Graphics2D g) {
@@ -230,7 +230,7 @@ public class Menu {
 				g.drawString(opts[i], (sX(1920)-fw)/2, sY(opt_y[i]));
 			}
 		}
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 	}
 	
 	protected int get_opt_y() { return 71*curr_opt + 593; }

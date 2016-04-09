@@ -92,7 +92,7 @@ public class LoadingScreen {
 	private void draw_primary (Graphics2D g) {
 		g.setColor(parent.bg_color);
 		g.drawImage(parent.get_images().get("LOAD_BG"), sX(0), sY(0), sW(1920), sH(1080), null);
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 		g.fillRect(sX(0), sY(0), sW(1920), sH(this.bar_height));
 		g.fillRect(sX(0), sY(980), sW(1920), sH(this.bar_height));
 	}
@@ -204,7 +204,7 @@ public class LoadingScreen {
 		g.setColor(new Color(255, 255, 255, alpha));
 		g.fillRect(sX(0), sY(0), sW(1920), sH(1080));
 		
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 		
 		g.setColor(parent.bg_color);
 		bar_height = (short)(bar_height - sH(25)*(Math.cos(btheta)+1));

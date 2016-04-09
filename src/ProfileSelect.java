@@ -217,7 +217,7 @@ public class ProfileSelect {
 		g.drawString("settings", (sX(1920)-fw)/2, sY(714));
 		fw = fm.stringWidth("exit");
 		g.drawString("exit", (sX(1920)-fw)/2, sY(787));
-		g.drawImage(parent.get_images().get("LOGO_BK"), sX(571), sY(200), sW(777), sH(258), null);
+		g.drawImage(parent.get_images().get("LOGO_BK"), sX(720), sY(253), sW(477), sH(163), null);
 	}
 	
 	private void transition_main(Graphics2D g) {
