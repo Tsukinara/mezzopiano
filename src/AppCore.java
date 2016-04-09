@@ -129,7 +129,7 @@ public class AppCore {
 		g.fillRect(sX(0), sY(1080-bar_h2+1), sW(1920), sH(bar_h2));
 		
 		g.setComposite(AlphaComposite.SrcOver.derive(1f-(alpha/255f)));
-		g.drawImage(parent.get_images().get("LOGO_WH"), sX(779), sY(20), sW(362), sH(83), null);
+		g.drawImage(parent.get_images().get("LOGO_WH"), sX(825), sY(33), sW(265), sH(62), null);
 		
 	}
 	
