@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 public class Analyzer {
 	private final static int[] maj_arr = {2, 4, 5, 7, 9, 11};
@@ -11,6 +10,11 @@ public class Analyzer {
 	private final static int TEMPO_MAX = 200;
 	private final static int TEMPO_MIN_REQ_CHORDS = 4;
 	private final static int TEMPO_CLUSTER_RADIUS = 10;
+	private final static int TEMPO_MIN_NOTE_RES = 75000; // 32nd notes in 4/4 @ 200 BPM
+	
+	public static AppCore.Mood get_mood(){
+		return AppCore.Mood.M_NEUTRAL;
+	}
 	
 	public static KeySignature get_key_signature(ArrayList<Note> history, KeySignature curr) {
 		int[] vals = new int[12];	
@@ -63,27 +67,37 @@ public class Analyzer {
 	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history, int winsize) {
 		ClusterList tempos;
 		long diff, sustain;
-		int weight;
-		int window = Math.min(note_history.size(), winsize);
+		int weight, window, winstart;
+		window = Math.min(note_history.size(), winsize);
 		if (window < TEMPO_MIN_REQ_CHORDS){
 			return -1;
 		}
+		winstart = note_history.size() - window;
 		tempos = new ClusterList();
 		/*
 		 * Pseudo k-means (because unbounded performance in real-time code is garbage)
 		 * compute based on time between notes as well as how long notes are held
 		 */
-		for (int i = 0; i < window - 1; i++){
+		for (int i = note_history.size()-2; i >= winstart; i--){
 			diff = note_history.get(i+1).get_start() - note_history.get(i).get_start();
 			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
 			weight = note_history.get(i).vel() + note_history.get(i+1).vel();
-			if (diff > 0){
+			if (diff > TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS);
+			} else {
+				if (winstart > 0){
+					winstart--;
+				} else {
+					window--;
+				}
 			}
 			/* weight the sustains less */
-			if (sustain > 0){
+			if (sustain > TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
 			}
+		}
+		if (window < TEMPO_MIN_REQ_CHORDS){
+			return -1;
 		}
 		return (int)(tempos.aggregate(0.0).center());
 	}
