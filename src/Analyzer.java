@@ -3,8 +3,8 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Analyzer {
-	private final static int[] maj_arr = {2, 4, 5, 7, 9, 11};
-	private final static int[] min_arr = {2, 3, 5, 7, 8, 11};
+	protected final static int[] maj_arr = {2, 4, 5, 7, 9, 11};
+	protected final static int[] min_arr = {2, 3, 5, 7, 8, 11};
 	private final static int ret = 7;
 	private final static int TEMPO_MIN = 60;
 	private final static int TEMPO_MAX = 200;
@@ -58,8 +58,13 @@ public class Analyzer {
 		return new KeySignature(Music.getSimplestKey(base), maj);
 	}
 	
-	public static KeySignature get_maj_min(KeySignature k, ArrayList<Chord> history) {
-		return null;
+	public static int get_maj_min(ArrayList<Chord> cnc_history) {
+		System.out.println("CHORD HISTORY:");
+		for (int i = 0; i < cnc_history.size(); i++) {
+			System.out.print(cnc_history.get(i) + ", ");
+		}
+		System.out.println();
+		return -1;
 	}
 	
 	public static TimeSignature get_time_signature(ArrayList<Note> note_history) {
@@ -161,8 +166,8 @@ public class Analyzer {
 	public static String get_chord_context_free (ArrayList<Note> notes, int min) {
 		ArrayList<Integer> unique = new ArrayList<Integer>();
 		for (Note n : notes) if (!unique.contains(n.key())) unique.add(n.key());
-		if (unique.size() > 4) return "unknown";
-		if (unique.size() < min) return "unknown";
+		if (unique.size() > 4) return "unknown0";
+		if (unique.size() < min) return "unknown9";
 		Integer [] uniq = unique.toArray(new Integer [unique.size()]);
 		int triad = get_triad(uniq); String ret = "";
 		if (triad < 0) {

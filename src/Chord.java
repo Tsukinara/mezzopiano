@@ -238,6 +238,24 @@ public class Chord {
 		g.drawString(get_roman_name(), x - (fw/2), y);
 	}
 	
+	/* returns an integer 0 through 11, where 0 represents A, assuming the context of
+	 * a given key
+	 */
+	public String get_name_context_free(int context) {
+		System.out.println(this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2]) + context);
+		switch (qual) {
+		case 'M':
+			if (this.code.charAt(0) != 'F') 
+				return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2])) + context)%12) + qual + (seven?"7":"");
+			return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2])) + 7 + context)%12) + qual;	
+		case 'm':
+			if (this.code.charAt(0) != 'F') 
+				return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.min_arr[this.base - 2])) + context)%12) + qual + (seven?"7":"");
+			return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.min_arr[this.base - 2])) + 7 + context)%12) + qual;
+		default: return "not maj/min";
+		}
+	}
+	
 	public void draw_symbol(Graphics2D g, int x, int y, int size, KeySignature k) {
 		
 	}
@@ -245,10 +263,12 @@ public class Chord {
 	public String toString() { return get_roman_name(); }
 	
 	public static void main(String [] args) {
-		Chord c = new Chord("2-107d");
+		Chord c = new Chord("F6-00M");
+		System.out.println(c.base);
 		System.out.println(c.get_roman_name());
 		System.out.println(c.base_index());
 		System.out.println(Arrays.toString(c.get_chord_tones()));
 		System.out.println(c.is_chord_tone(3));
+		System.out.println(c.get_name_context_free(3));
 	}
 }

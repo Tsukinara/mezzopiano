@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 public class AppCore {
 	private final static short dA = 5, dL = 4, vel_thresh = 1;
-	private final static float dT = 0.05f;
+	private final static float dT = 0.05f, dTm = 0.1f, dF = 0.5f;
 	private final static double wtx_s = 150.0, wtx_e = 1770.0;
 	private final static double wbx_s = 60.0, wbx_e = 1860.0;
 	private final static double btx_s = 172.9, btx_e = 1698.8, btx_w = 18.66;
@@ -42,20 +42,19 @@ public class AppCore {
 	private ArrayList<Integer> start, end, key;
 	private HashMap<Chord, Double> next_chords;
 	private ArrayList<Color> histc;
-	private short curr_state, alpha, alpha2, alpha3, bar_h1, bar_h2, bar_max, delay;
+	private short curr_state, alpha, alpha2, alpha3, alpha_m, bar_h1, bar_h2, bar_max, delay;
 	private short num_beats, beat, bcount;
-	private float theta;
+	private float theta, c_temp, t_temp, c_fan, t_fan;;
 	private Display parent;
 	private boolean flag_analysis;
 	private NoteBuffer nb;
 	private double[] w_tl, w_tr, w_bl, w_br;
 	private double[] b_tl, b_tr, b_bl, b_br;
 	private Harmonizer synth;
-	private Font anal_base;
-	private Font mood_base;
-	private int kkey, c_temp, t_temp, c_fan, t_fan;
+	private Font anal_base, mood_base, ambi_base;
+	private int kkey;
 	private Mood mood;
-	private String mood_name;
+	private String mood_name, color_type, mood_icon, ctype_p, micon_p;
 	boolean harm;
 	
 	public AppCore(Display parent) {
@@ -98,13 +97,17 @@ public class AppCore {
 				b_tl[j] = (double)i*w3 + btx_s;
 				b_tr[j] = b_tl[j] + btx_w;
 				b_bl[j] = (double)i*w4 + bbx_s;
-				b_br[j] =b_bl[j] + bbx_w;
+				b_br[j] = b_bl[j] + bbx_w;
 				j++;
 			}
 		}
 		this.anal_base = new Font("Plantin MT Std", Font.PLAIN, sH(40));
+		this.ambi_base = new Font("Plantin MT Std", Font.PLAIN, sH(45));
 		this.mood_base = new Font("Plantin MT Std", Font.PLAIN, sH(54));
-		this.alpha = 255;	this.alpha2 = 0; this.alpha3 = 255;
+		this.alpha = 255;	this.alpha2 = 0; this.alpha3 = 255; this.alpha_m = 255;
+		this.c_temp = 70; this.c_fan = 0;
+		this.color_type = "clear"; this.mood_icon = "ICON_NA";
+		this.ctype_p = "clear"; this.micon_p = "ICON_NA";
 		
 		Point2D start = new Point2D.Float(sX(0), sY(0));
 		Point2D end = new Point2D.Float(sX(0), sY(1080));
@@ -239,20 +242,20 @@ public class AppCore {
 	}
 	
 	private void draw_ambiance(Graphics2D g) {
-		switch (this.mood) {
-		case M_NEUTRAL:
-			
-			break;
-		case M_CHAOTIC:
-			break;
-		case M_HAPPY:
-			break;
-		case M_SAD:
-			break;
-		case M_TRANQUIL:
-			break;
-		case M_DRAMATIC:
-			break;
+		g.setFont(ambi_base);
+		int fw = g.getFontMetrics().stringWidth((int)c_temp + "\u00b0");
+		g.drawString((int)c_temp + "\u00b0", sX(711)-fw/2, sY(304));
+		fw = g.getFontMetrics().stringWidth((int)c_fan + "%");
+		g.drawString((int)c_fan + "%", sX(1043)-fw/2, sY(304));
+		if (alpha3 == 0) {
+			g.setComposite(AlphaComposite.SrcOver.derive(1f - alpha_m/255f));
+			fw = g.getFontMetrics().stringWidth(ctype_p);
+			g.drawString(ctype_p, sX(877)-fw/2, sY(304));
+			g.drawImage(parent.get_images().get(micon_p), sX(1176), sY(253), sH(65), sW(65), null);
+			g.setComposite(AlphaComposite.SrcOver.derive(alpha_m/255f));
+			fw = g.getFontMetrics().stringWidth(color_type);
+			g.drawString(color_type, sX(877)-fw/2, sY(304));
+			g.drawImage(parent.get_images().get(mood_icon), sX(1176), sY(253), sH(65), sW(65), null);
 		}
 	}
 	
@@ -361,6 +364,12 @@ public class AppCore {
 			case KeyEvent.VK_ESCAPE: case KeyEvent.VK_X: if (curr_state == 1) curr_state = 2; break;
 			case KeyEvent.VK_R: nb.reinit(); init_values(); break;
 			case KeyEvent.VK_SPACE: parent.reset(); break;
+			case KeyEvent.VK_A: set_mood(Mood.M_CHAOTIC); break;
+			case KeyEvent.VK_S: set_mood(Mood.M_DRAMATIC); break;
+			case KeyEvent.VK_D: set_mood(Mood.M_HAPPY); break;
+			case KeyEvent.VK_F: set_mood(Mood.M_SAD); break;
+			case KeyEvent.VK_G: set_mood(Mood.M_TRANQUIL);  break;
+			case KeyEvent.VK_H: set_mood(Mood.M_NEUTRAL); break;
 		}
 	}
 	
@@ -410,7 +419,7 @@ public class AppCore {
 		adjust_tempo();
 		pedal_color();
 		kkey = (nb.curr_key == null? -999 : Music.getKey(nb.curr_key.key + "" + nb.curr_key.type));
-		if (Analyzer.get_mood() != mood);
+		if (Analyzer.get_mood() != mood) { set_mood(Analyzer.get_mood()); }
 		switch (curr_state) {
 			case 0: // transition in;
 				alpha2 = (short)(alpha2-dA < 0 ? 0 : alpha2-dA);
@@ -420,7 +429,12 @@ public class AppCore {
 				break;
 			case 1: // idle
 				if (flag_analysis) alpha3 = (short)(alpha3-dA < 0 ? 0 : alpha3-dA);
-				mellifluity(); 	history_step();
+				if (alpha_m < 255) alpha_m = (short)(alpha_m+dA > 255? 255: alpha_m+dA);
+				if (c_temp < t_temp) c_temp = (c_temp + dTm > t_temp ? t_temp : c_temp + dTm);
+				if (c_temp > t_temp) c_temp = (c_temp - dTm < t_temp ? t_temp : c_temp - dTm);
+				if (c_fan < t_fan) c_fan = (c_fan + dF > t_fan ? t_fan : c_fan + dF);
+				if (c_fan > t_fan) c_fan = (c_fan - dF < t_fan ? t_fan : c_fan - dF);
+				mellifluity(); 	history_step();	
 				break;
 			case 2: // transition out
 				mellifluity(); 	history_step();
@@ -436,6 +450,48 @@ public class AppCore {
 				} 
 				break;
 		}
+	}
+	
+	private void set_mood(Mood m) {
+		this.mood = m;
+		this.ctype_p = color_type;
+		this.micon_p = mood_icon;
+		this.alpha_m = 0;
+		switch (this.mood) {
+		case M_NEUTRAL:
+			this.t_temp = 70; this.t_fan = 10;
+			this.mood_icon = "ICON_NA";
+			this.color_type = "clear";
+			break;
+		case M_CHAOTIC:
+			this.t_temp = (int)(Math.random()*10.0+74);
+			this.t_fan = (int)(Math.random()*101);
+			int tmp = (int)(Math.random()*4);
+			this.mood_icon = (tmp == 0?"ICON_RN":(tmp == 1?"ICON_WD":(tmp == 2?"ICON_TD":"ICON_BD")));
+			this.color_type = "rand";
+			break;
+		case M_HAPPY:
+			this.t_temp = 74; this.t_fan = 85;
+			this.mood_icon = "ICON_BD";
+			this.color_type = "warm";
+			break;
+		case M_SAD:
+			this.t_temp = 65; this.t_fan = 5;
+			this.mood_icon = "ICON_RN";
+			this.color_type = "cool";
+			break;
+		case M_TRANQUIL:
+			this.t_temp = 68; this.t_fan = 30;
+			this.color_type = "gentle";
+			this.mood_icon = "ICON_WD";
+			break;
+		case M_DRAMATIC:
+			this.t_temp = 71; this.t_fan = 100;
+			this.mood_icon = "ICON_TD";
+			this.color_type = "intense";
+			break;
+		}
+		this.mood_name = get_mood_name();
 	}
 	
 	public synchronized void note_pressed(byte id, byte vel, long timestamp) {
