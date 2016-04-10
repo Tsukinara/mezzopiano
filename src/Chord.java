@@ -242,16 +242,11 @@ public class Chord {
 	 * a given key
 	 */
 	public String get_name_context_free(int context) {
-		System.out.println(this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2]) + context);
 		switch (qual) {
-		case 'M':
+		case 'M': case 'm':
 			if (this.code.charAt(0) != 'F') 
 				return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2])) + context)%12) + qual + (seven?"7":"");
 			return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.maj_arr[this.base - 2])) + 7 + context)%12) + qual;	
-		case 'm':
-			if (this.code.charAt(0) != 'F') 
-				return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.min_arr[this.base - 2])) + context)%12) + qual + (seven?"7":"");
-			return Music.getRoot(((this.base == 1 ? 0 : (Analyzer.min_arr[this.base - 2])) + 7 + context)%12) + qual;
 		default: return "not maj/min";
 		}
 	}
@@ -263,7 +258,7 @@ public class Chord {
 	public String toString() { return get_roman_name(); }
 	
 	public static void main(String [] args) {
-		Chord c = new Chord("F6-00M");
+		Chord c = new Chord("6-000m");
 		System.out.println(c.base);
 		System.out.println(c.get_roman_name());
 		System.out.println(c.base_index());

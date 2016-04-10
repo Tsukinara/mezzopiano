@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 public class NoteBuffer {
 	private static final int max_notes = 200;
+	private static final int max_chords = 50;
 	private static final int key_track = 10;
 	public static final int same_thresh = 50000;
 	public static final int tril_thresh = 500000;
@@ -29,7 +30,7 @@ public class NoteBuffer {
 	protected ArrayList<Note> bass;
 	private ArrayList<Note> marks;
 	protected ArrayList<Chord> chord_history;
-	private ArrayList<Long> chord_history_t;
+	protected ArrayList<Long> chord_history_t;
 	private int curr_index;
 	
 	private byte dominant;
@@ -74,7 +75,7 @@ public class NoteBuffer {
 	public synchronized void add_note(byte id, boolean damped, byte vel, long time) {
 		Note n = new Note(id, vel, damped, time, this);
 		Note tmp = null;
-		add_circular(tempo_buffer, new Note(n));
+		add_circular(tempo_buffer, new Note(id, vel, damped, time, this));
 		for (Note nt : note_buffer) {
 			if (nt.id() == id) tmp = nt;
 		}
@@ -120,6 +121,16 @@ public class NoteBuffer {
 		arr.add(n);
 	}
 	
+	private synchronized void add_circ_ch(ArrayList<Chord> arr, Chord c){
+		if (arr.size() == max_chords) { arr.remove(0); }
+		arr.add(c);
+	}
+	
+	private synchronized void add_circ_ln(ArrayList<Long> arr, long l){
+		if (arr.size() == max_chords) { arr.remove(0); }
+		arr.add(l);
+	}
+	
 	private synchronized void add_history(Note n) {
 		history.add(n);
 		if (history.size() > max_notes) {
@@ -153,8 +164,10 @@ public class NoteBuffer {
 		Chord c = Analyzer.get_chord(rel_buffer, all_buffer, dominant, curr_key, curr_chord);
 		if (c != null) this.curr_chord = c;
 		if (curr_chord != null && !prev_chord.equals(curr_chord.code)) {
-			chord_history.add(curr_chord);
-			chord_history_t.add(timeStamp);
+			int maj_min = Analyzer.get_maj_min(chord_history);
+			System.out.println("Mode: " + ((maj_min == 0)? "maj" : "min"));
+			add_circ_ch(chord_history, curr_chord);
+			add_circ_ln(chord_history_t, timeStamp);
 			parent.s_ac.chord_changed();
 		}
 		filter_chord_history();
