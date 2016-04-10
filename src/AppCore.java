@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AppCore {
-	private final static short dA = 5, dL = 4, vel_thresh = 1;
-	private final static float dT = 0.05f, dTm = 0.1f, dF = 0.5f;
+	private final static short dA = 5, dL = 4, dC = 3, vel_thresh = 1;
+	private final static float dT = 0.05f, dTm = 0.1f, dF = 1f;
 	private final static double wtx_s = 150.0, wtx_e = 1770.0;
 	private final static double wbx_s = 60.0, wbx_e = 1860.0;
 	private final static double btx_s = 172.9, btx_e = 1698.8, btx_w = 18.66;
@@ -32,12 +32,17 @@ public class AppCore {
 	private final static Color harm_br = new Color(65, 136, 69);
 	private final static Color pedal_u = new Color(122, 180, 208);
 	private final static Color pedal_d = new Color(88, 141, 167);
-	private final static Color ui_icon = new Color(39, 73, 94);
+
 	private final static int w_lookup[] = { 1, 3, 4, 6, 8, 9, 11, 13, 15, 16, 18, 20, 21, 23, 25, 27, 28, 30, 32, 33, 35, 37, 39, 40, 42, 44, 45, 47, 49, 51, 52, 54, 56, 57, 59, 61, 63, 64, 66, 68, 69, 71, 73, 75, 76, 78, 80, 81, 83, 85, 87, 88 };
 	private final static int b_lookup[] = { 2, 5, 7, 10, 12, 14, 17, 19, 22, 24, 26, 29, 31, 34, 36, 38, 41, 43, 46, 48, 50, 53, 55, 58, 60, 62, 65, 67, 70, 72, 74, 77, 79, 82, 84, 86 };
 	public enum Mood { M_NEUTRAL, M_CHAOTIC, M_TRANQUIL, M_SAD, M_DRAMATIC, M_HAPPY };
+	private final static String sad[] = { "melancholic", "somber", "dismal", "morose", "gloomy", "despondent", "downcast", "languished"};
+	private final static String happy[] = { "sanguine", "jubilant", "chipper", "cheerful", "spirited", "optimistic", "animated" };
+	private final static String tranquil[] = { "tranquil", "peaceful", "nostalgic", "quiet", "placid", "gentle", "mild", "halcyon" };
+	private final static String dramatic[] = { "dramatic", "vivid", "tense", "powerful", "climactic", "exciting", "striking", "sensational" };
+	private final static String chaotic[] = { "chaotic", "disordered", "anarchic", "turbid", "turbulent", "tumultuous" };
 	
-	private Color p_color;
+	private Color p_color, t_color; protected Color c_color;
 	private LinearGradientPaint l1, l2, l3;
 	private ArrayList<Integer> start, end, key;
 	private HashMap<Chord, Double> next_chords;
@@ -54,7 +59,7 @@ public class AppCore {
 	private Font anal_base, mood_base, ambi_base;
 	private int kkey;
 	private Mood mood;
-	private String mood_name, color_type, mood_icon, ctype_p, micon_p;
+	private String mood_name, mood_p, color_type, mood_icon, ctype_p, micon_p;
 	boolean harm;
 	
 	public AppCore(Display parent) {
@@ -106,8 +111,10 @@ public class AppCore {
 		this.mood_base = new Font("Plantin MT Std", Font.PLAIN, sH(54));
 		this.alpha = 255;	this.alpha2 = 0; this.alpha3 = 255; this.alpha_m = 255;
 		this.c_temp = 70; this.c_fan = 0;
+		this.t_temp = 70; this.t_fan = 0;
 		this.color_type = "clear"; this.mood_icon = "ICON_NA";
 		this.ctype_p = "clear"; this.micon_p = "ICON_NA";
+		this.t_color = cS(Color.WHITE, 127); this.c_color = cS(Color.BLACK, 127);
 		
 		Point2D start = new Point2D.Float(sX(0), sY(0));
 		Point2D end = new Point2D.Float(sX(0), sY(1080));
@@ -207,6 +214,7 @@ public class AppCore {
 		g.drawImage(parent.get_images().get("ICON_NS"), sX(1168), sY(148), sW(65), sH(65), null);
 		draw_ambiance(g);
 		
+		g.setComposite(AlphaComposite.SrcOver.derive(1f - alpha3/255f));
 		g.setColor(new Color(129, 164, 207));
 		g.fillRect(sX(1320), sY(140), sW(600), sH(66));
 		
@@ -217,7 +225,7 @@ public class AppCore {
 		
 		g.setFont(mood_base);
 		fw = g.getFontMetrics().stringWidth(mood_name);
-		g.drawString(mood_name, sX(1320) + (sX(600)-fw)/2, sY(273));
+		g.drawString(mood_name, sX(1320) + (sX(600)-fw)/2, sY(283));
 		
 		//		g.setFont(new Font("Plantin MT Std", Font.PLAIN, 18));
 //		g.drawString("DOM:" + Music.getNoteName(nb.dom()), sX(1320), sY(220));
@@ -361,7 +369,10 @@ public class AppCore {
 	
 	public void handle(KeyEvent e) {
 		switch (e.getKeyCode()) {
-			case KeyEvent.VK_ESCAPE: case KeyEvent.VK_X: if (curr_state == 1) curr_state = 2; break;
+			case KeyEvent.VK_ESCAPE: case KeyEvent.VK_X: 
+				if (curr_state == 1) curr_state = 2; 
+				this.t_color = Color.BLACK;
+				break;
 			case KeyEvent.VK_R: nb.reinit(); init_values(); break;
 			case KeyEvent.VK_SPACE: parent.reset(); break;
 			case KeyEvent.VK_A: set_mood(Mood.M_CHAOTIC); break;
@@ -370,6 +381,7 @@ public class AppCore {
 			case KeyEvent.VK_F: set_mood(Mood.M_SAD); break;
 			case KeyEvent.VK_G: set_mood(Mood.M_TRANQUIL);  break;
 			case KeyEvent.VK_H: set_mood(Mood.M_NEUTRAL); break;
+			case KeyEvent.VK_ENTER: flag_analysis = true; break;
 		}
 	}
 	
@@ -417,6 +429,7 @@ public class AppCore {
 	
 	public void step() {
 		adjust_tempo();
+		adjust_color();
 		pedal_color();
 		kkey = (nb.curr_key == null? -999 : Music.getKey(nb.curr_key.key + "" + nb.curr_key.type));
 		//if (Analyzer.get_mood() != mood) { set_mood(Analyzer.get_mood()); }
@@ -434,6 +447,7 @@ public class AppCore {
 				if (c_temp > t_temp) c_temp = (c_temp - dTm < t_temp ? t_temp : c_temp - dTm);
 				if (c_fan < t_fan) c_fan = (c_fan + dF > t_fan ? t_fan : c_fan + dF);
 				if (c_fan > t_fan) c_fan = (c_fan - dF < t_fan ? t_fan : c_fan - dF);
+				if (mood == Mood.M_CHAOTIC && Math.random() < .01) set_mood(Mood.M_CHAOTIC); 
 				mellifluity(); 	history_step();	
 				break;
 			case 2: // transition out
@@ -450,18 +464,21 @@ public class AppCore {
 				} 
 				break;
 		}
+		parent.hint.sendColor(c_color);
+		parent.hint.sendFan((int)c_fan);
+		parent.hint.sendTemp((int)c_temp);
 	}
 	
 	private void set_mood(Mood m) {
-		this.mood = m;
-		this.ctype_p = color_type;
-		this.micon_p = mood_icon;
-		this.alpha_m = 0;
+		this.mood = m; this.alpha_m = 0;
+		this.ctype_p = color_type;	this.micon_p = mood_icon;
+		this.mood_p = mood_name;
 		switch (this.mood) {
 		case M_NEUTRAL:
 			this.t_temp = 70; this.t_fan = 10;
 			this.mood_icon = "ICON_NA";
 			this.color_type = "clear";
+			this.t_color = cS(Color.WHITE, 127);
 			break;
 		case M_CHAOTIC:
 			this.t_temp = (int)(Math.random()*10.0+74);
@@ -469,26 +486,31 @@ public class AppCore {
 			int tmp = (int)(Math.random()*4);
 			this.mood_icon = (tmp == 0?"ICON_RN":(tmp == 1?"ICON_WD":(tmp == 2?"ICON_TD":"ICON_BD")));
 			this.color_type = "rand";
+			this.t_color = cS(new Color((int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255)), 127);
 			break;
 		case M_HAPPY:
 			this.t_temp = 74; this.t_fan = 85;
 			this.mood_icon = "ICON_BD";
 			this.color_type = "warm";
+			this.t_color = cS(new Color(255, 127, 0), 127);
 			break;
 		case M_SAD:
 			this.t_temp = 65; this.t_fan = 5;
 			this.mood_icon = "ICON_RN";
 			this.color_type = "cool";
+			this.t_color = cS(new Color(0, 127, 255), 127);
 			break;
 		case M_TRANQUIL:
 			this.t_temp = 68; this.t_fan = 30;
 			this.color_type = "gentle";
 			this.mood_icon = "ICON_WD";
+			this.t_color = cS(new Color(127, 255, 255), 127);
 			break;
 		case M_DRAMATIC:
 			this.t_temp = 71; this.t_fan = 100;
 			this.mood_icon = "ICON_TD";
 			this.color_type = "intense";
+			this.t_color = cS(new Color(255, 127, 255), 127);
 			break;
 		}
 		this.mood_name = get_mood_name();
@@ -519,15 +541,26 @@ public class AppCore {
 	}
 	
 	private String get_mood_name() {
-		String mname = "";
 		switch (mood) {
-		case M_SAD: return "melancholic";
-		case M_HAPPY: return "jubliant";
-		case M_TRANQUIL: return "tranquil";
-		case M_CHAOTIC: return "chaotic";
-		case M_DRAMATIC: return "dramatic";
+		case M_SAD: return sad[(int)(Math.random() * sad.length)];
+		case M_HAPPY: return happy[(int)(Math.random() * happy.length)];
+		case M_TRANQUIL: return tranquil[(int)(Math.random() * tranquil.length)];
+		case M_CHAOTIC: return chaotic[(int)(Math.random() * chaotic.length)];
+		case M_DRAMATIC: return dramatic[(int)(Math.random() * dramatic.length)];
 		default: return "neutral";
 		}
+	}
+	
+	private void adjust_color() {
+		int r = c_color.getRed(); int g = c_color.getGreen(); int b = c_color.getBlue();
+		if (r < t_color.getRed()) r = (r + dC > t_color.getRed() ? t_color.getRed() : r + dC);
+		if (g < t_color.getRed()) g = (g + dC > t_color.getGreen() ? t_color.getGreen() : g + dC);
+		if (b < t_color.getRed()) b = (b + dC > t_color.getBlue() ? t_color.getBlue(): b + dC);
+		if (r > t_color.getRed()) r = (r - dC < t_color.getRed() ? t_color.getRed() : r - dC);
+		if (g > t_color.getRed()) g = (g - dC < t_color.getGreen() ? t_color.getGreen() : g - dC);
+		if (b > t_color.getRed()) b = (b - dC < t_color.getBlue() ? t_color.getBlue() : b - dC);
+		
+		this.c_color = new Color(r, g, b);
 	}
 	
 	public void note_released(byte id, long timestamp) {}
@@ -544,4 +577,11 @@ public class AppCore {
 	private float sF (float f) { return parent.scaleF(f); }
 	private int[] sX (double[] x) { return parent.scaleX(x); }
 	private int[] sY (double[] y) { return parent.scaleY(y); }
+	private Color cS (Color c, int intensity) {
+		int r = c.getRed(); int g = c.getGreen(); int b = c.getBlue();
+		r = (int)(r * (intensity / 255.0));
+		g = (int)(g * (intensity / 255.0));
+		b = (int)(b * (intensity / 255.0));
+		return new Color(r, g, b);
+	}
 }
