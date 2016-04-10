@@ -120,6 +120,10 @@ public class MidiHandler {
 //				Analyzer.get_key_signature(buffer.key_analysis, buffer.curr_key);
 
 			}
+			if (debug){
+				int tempo = Analyzer.get_tempo(Analyzer.get_time_signature(buffer.history), buffer.history, 10);
+				System.out.println("Tempo: " + tempo + " BPM");
+			}
 		}
 		
 		public void close() {}

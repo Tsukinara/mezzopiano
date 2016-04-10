@@ -7,6 +7,10 @@ public class Analyzer {
 	private final static int[] maj_arr = {2, 4, 5, 7, 9, 11};
 	private final static int[] min_arr = {2, 3, 5, 7, 8, 11};
 	private final static int ret = 7;
+	private final static int TEMPO_MIN = 60;
+	private final static int TEMPO_MAX = 200;
+	private final static int TEMPO_MIN_REQ_CHORDS = 4;
+	private final static int TEMPO_CLUSTER_RADIUS = 10;
 	
 	public static KeySignature get_key_signature(ArrayList<Note> history, KeySignature curr) {
 		int[] vals = new int[12];	
@@ -56,8 +60,43 @@ public class Analyzer {
 		return null;
 	}
 	
-	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history) {
-		return 0;
+	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history, int winsize) {
+		ClusterList tempos;
+		long diff, sustain;
+		int weight;
+		int window = Math.min(note_history.size(), winsize);
+		if (window < TEMPO_MIN_REQ_CHORDS){
+			return -1;
+		}
+		tempos = new ClusterList();
+		/*
+		 * Pseudo k-means (because unbounded performance in real-time code is garbage)
+		 * compute based on time between notes as well as how long notes are held
+		 */
+		for (int i = 0; i < window - 1; i++){
+			diff = note_history.get(i+1).get_start() - note_history.get(i).get_start();
+			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
+			weight = note_history.get(i).vel() + note_history.get(i+1).vel();
+			if (diff > 0){
+				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS);
+			}
+			/* weight the sustains less */
+			if (sustain > 0){
+				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
+			}
+		}
+		return (int)(tempos.aggregate(0.0).center());
+	}
+	
+	private static void tempo_pow2_insert(ClusterList clusters, long time_length,
+			int weight, int tolerance){
+		long tempo = 60000000 / time_length; /* usecs to bpm */
+		for (long tmp = tempo; tmp <= TEMPO_MAX; tmp *= 2){
+			clusters.insert(new Cluster(tempo, weight), tolerance);
+		}
+		for (long tmp = tempo/2; tmp >= TEMPO_MIN; tmp /= 2){
+			clusters.insert(new Cluster(tempo, weight), tolerance);
+		}
 	}
 	
 	public static String get_chord_context_free (ArrayList<Note> notes, int min) {
