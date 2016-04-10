@@ -82,7 +82,7 @@ public class Analyzer {
 			diff = note_history.get(i+1).get_start() - note_history.get(i).get_start();
 			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
 			weight = note_history.get(i).vel() + note_history.get(i+1).vel();
-			if (diff > TEMPO_MIN_NOTE_RES){
+			if (diff >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS);
 			} else {
 				if (winstart > 0){
@@ -92,7 +92,7 @@ public class Analyzer {
 				}
 			}
 			/* weight the sustains less */
-			if (sustain > TEMPO_MIN_NOTE_RES){
+			if (sustain >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
 			}
 		}
@@ -106,10 +106,10 @@ public class Analyzer {
 			int weight, int tolerance){
 		long tempo = 60000000 / time_length; /* usecs to bpm */
 		for (long tmp = tempo; tmp <= TEMPO_MAX; tmp *= 2){
-			clusters.insert(new Cluster(tempo, weight), tolerance);
+			clusters.insert(new Cluster(tmp, weight), tolerance);
 		}
 		for (long tmp = tempo/2; tmp >= TEMPO_MIN; tmp /= 2){
-			clusters.insert(new Cluster(tempo, weight), tolerance);
+			clusters.insert(new Cluster(tmp, weight), tolerance);
 		}
 	}
 	

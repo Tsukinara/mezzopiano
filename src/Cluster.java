@@ -10,7 +10,7 @@ import java.util.Collection;
 public class Cluster implements Comparable<Cluster> {
 	public ArrayList<Long> values;
 	public ArrayList<Integer> weights;
-	public long aggregate;
+	private long aggregate;
 	public long total_weight;
 	public Cluster(){
 		values = new ArrayList<Long>();
@@ -32,9 +32,10 @@ public class Cluster implements Comparable<Cluster> {
 		total_weight += weight;
 	}
 	public void merge(Cluster cl){
-		for (int i = 0; i < cl.values.size(); i++){
-			this.insert(cl.values.get(i), cl.weights.get(i));
-		}
+		this.values.addAll(cl.values);
+		this.weights.addAll(cl.weights);
+		this.aggregate += cl.aggregate;
+		this.total_weight += cl.total_weight;
 	}
 	public long center(){
 		return (total_weight > 0)? (aggregate / total_weight) : 0;

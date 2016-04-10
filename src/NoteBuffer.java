@@ -17,6 +17,7 @@ public class NoteBuffer {
 	
 	// contains any notes that are relevant
 	public ArrayList<Note> rel_buffer;
+	public ArrayList<Note> tempo_buffer;
 	public ArrayList<Note> all_buffer;
 	public ArrayList<Note> history;
 	public ArrayList<Note> key_analysis;
@@ -48,6 +49,7 @@ public class NoteBuffer {
 		this.note_buffer = new ArrayList<Note>();
 		this.hold_buffer = new ArrayList<Note>();
 		this.rel_buffer = new ArrayList<Note>();
+		this.tempo_buffer = new ArrayList<Note>(max_notes);
 		this.all_buffer = new ArrayList<Note>();
 		this.history = new ArrayList<Note>();
 		this.marks = new ArrayList<Note>();
@@ -86,6 +88,7 @@ public class NoteBuffer {
 		note_buffer.remove(tmp);
 		note_buffer.add(n);
 		hold_buffer.add(n);
+		add_circular(tempo_buffer, n);
 		all_buffer.add(n);
 		add_history(n);
 		add_akey(n);
@@ -106,6 +109,13 @@ public class NoteBuffer {
 			for (Note n : tmp) bass.remove(n); tmp.clear();
 			this.bass.add(nt);
 			this.rel_buffer.add(nt);
+		}
+	}
+	
+	private synchronized void add_circular(ArrayList<Note> arr, Note n){
+		if (arr.size() == max_notes){
+			destroy_note(arr.remove(0));
+			arr.add(n);
 		}
 	}
 	
