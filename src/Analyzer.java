@@ -26,36 +26,68 @@ public class Analyzer {
 			return AppCore.Mood.M_CHAOTIC;
 		}
 		System.out.println(tempo + "\t" + mode + "\t" + vel);
+		if (check_toggle(nb.hold_buffer)){
+			nb.toggle = !nb.toggle;
+		}
+		if (nb.toggle){
+			nb.curr_mood = check_mood(nb.hold_buffer, nb.curr_mood);
+			return nb.curr_mood;
+		}
 		switch (mode){
 		case 0: //major
-			if (tempo >= 120){
-				to_ret = AppCore.Mood.M_HAPPY;
-			} else {
-				if (vel > 65){
-					to_ret = AppCore.Mood.M_NEUTRAL;
+			if (vel > 55){
+				if (tempo > 120 || tempo < 60){
+					to_ret = AppCore.Mood.M_HAPPY;
 				} else {
-					to_ret = AppCore.Mood.M_TRANQUIL;
+					to_ret = AppCore.Mood.M_NEUTRAL;
 				}
+			} else {
+				to_ret = AppCore.Mood.M_TRANQUIL;
 			}
 			break;
 		case 1: //minor
-			if (tempo >= 120){
-				if (vel > 80){
+			if (vel > 85){
+				to_ret = AppCore.Mood.M_DRAMATIC;
+			} else if (vel > 75){
+				if (tempo > 120 || tempo < 60){
 					to_ret = AppCore.Mood.M_DRAMATIC;
-				} else if (vel > 70){
-					to_ret = AppCore.Mood.M_NEUTRAL;
 				} else {
-					to_ret = AppCore.Mood.M_SAD;
+					to_ret = AppCore.Mood.M_NEUTRAL;
 				}
-			} else {
-				if (vel > 80){
-					to_ret = AppCore.Mood.M_SAD;
+			} else if (vel > 60){
+				if (tempo > 80){
+					to_ret = AppCore.Mood.M_NEUTRAL;
 				} else {
 					to_ret = AppCore.Mood.M_TRANQUIL;
 				}
+			} else {
+				to_ret = AppCore.Mood.M_SAD;
 			}
 			break;
-		default:
+		default: to_ret = AppCore.Mood.M_NEUTRAL;
+		}
+		nb.curr_mood = to_ret;
+		return to_ret;
+	}
+	
+	private static boolean check_toggle(ArrayList<Note> hold_buffer){
+		boolean to_ret = false;
+		for (Note n:hold_buffer){
+			to_ret |= (n.value() == 14);
+		}
+		return to_ret;
+	}
+	
+	private static AppCore.Mood check_mood(ArrayList<Note> hold_buffer, AppCore.Mood curr_mood){
+		AppCore.Mood to_ret = curr_mood;
+		for (Note n:hold_buffer){
+			switch (n.value()){
+			case 8: to_ret = AppCore.Mood.M_NEUTRAL; break;
+			case 9: to_ret = AppCore.Mood.M_HAPPY; break;
+			case 10: to_ret = AppCore.Mood.M_SAD; break;
+			case 11: to_ret = AppCore.Mood.M_DRAMATIC; break;
+			case 12: to_ret = AppCore.Mood.M_TRANQUIL; break;
+			}
 		}
 		return to_ret;
 	}
