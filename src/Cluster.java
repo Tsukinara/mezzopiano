@@ -3,9 +3,9 @@ import java.util.Collection;
 
 /**
  * Clustering for pseudo k-means approximation
- * @author bowenzhi
+ * <p>
  * could make this much more generalized with generics, but this suffices for now
- * @param <K>
+ * @author bowenzhi
  */
 public class Cluster implements Comparable<Cluster> {
 	public ArrayList<Long> values;

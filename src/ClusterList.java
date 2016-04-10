@@ -3,6 +3,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * Clustering for pseudo k-means approximation
+ * <p>
+ * could make this much more generalized with generics, but this suffices for now
+ * @author bowenzhi
+ */
 public class ClusterList {
 	ArrayList<Cluster> clusters;
 	public ClusterList(){

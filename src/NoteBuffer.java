@@ -21,6 +21,8 @@ public class NoteBuffer {
 	public ArrayList<Note> all_buffer;
 	public ArrayList<Note> history;
 	public ArrayList<Note> key_analysis;
+	
+	public ArrayList<Integer> tempo_history;
 	public int curr_tempo;
 	
 	//contains all notes within 1.5 octaves of the dominant overtone
@@ -60,6 +62,7 @@ public class NoteBuffer {
 		this.bass = new ArrayList<Note>();
 		this.key_analysis = new ArrayList<Note>();
 		this.dominant = -1;
+		this.tempo_history = new ArrayList<Integer>();
 		this.curr_tempo = -1;
 	}
 	
@@ -71,7 +74,7 @@ public class NoteBuffer {
 	public synchronized void add_note(byte id, boolean damped, byte vel, long time) {
 		Note n = new Note(id, vel, damped, time, this);
 		Note tmp = null;
-		add_circular(tempo_buffer, new Note(id, vel, damped, time, this));
+		add_circular(tempo_buffer, new Note(n));
 		for (Note nt : note_buffer) {
 			if (nt.id() == id) tmp = nt;
 		}

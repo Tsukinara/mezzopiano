@@ -8,8 +8,10 @@ public class Analyzer {
 	private final static int ret = 7;
 	private final static int TEMPO_MIN = 60;
 	private final static int TEMPO_MAX = 200;
-	private final static int TEMPO_MIN_REQ_CHORDS = 4;
+	private final static int TEMPO_MIN_INTERVALS = 1;
 	private final static int TEMPO_CLUSTER_RADIUS = 10;
+	private final static double TEMPO_LOOKBEHIND = 4.0;
+	private final static int TEMPO_CACHE_SIZE = 5;
 	private final static int TEMPO_MIN_NOTE_RES = 75000; // 32nd notes in 4/4 @ 200 BPM
 	
 	public static AppCore.Mood get_mood(){
@@ -64,10 +66,12 @@ public class Analyzer {
 		return null;
 	}
 	
-	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history, double lookbehind) {
+	public static int get_tempo(ArrayList<Note> note_history, ArrayList<Integer> tempo_history, int curr_tempo) {
 		ClusterList tempos;
-		long diff, sustain;
-		int weight, window = 0;
+		Note curr, prev;
+		double lookbehind = TEMPO_LOOKBEHIND;
+		long diff;
+		int weight, window = 0, tempo;
 		System.out.println("his_size: " + note_history.size());
 		tempos = new ClusterList();
 		/*
@@ -75,38 +79,83 @@ public class Analyzer {
 		 * compute based on time between notes as well as how long notes are held
 		 */
 		for (int i = note_history.size()-2; i >= 0 && lookbehind > 0; i--){
-			diff = note_history.get(i+1).get_start() - note_history.get(i).get_start();
-//			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
-			weight = note_history.get(i).vel() + note_history.get(i+1).vel();
-			//System.out.println("diff: " + diff + "\tsustain: " + '0' + "\tweight: " + weight);
+			curr = note_history.get(i+1); prev = note_history.get(i);
+			diff = curr.get_start() - prev.get_start();
+			weight = curr.vel() / ((curr.octave() < 4)? 1 : curr.octave());
 			if (diff >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS);
 				lookbehind -= (double)diff / 1000000;
 				window++;
 			}
-			/* weight the sustains less */
-//			if (sustain >= TEMPO_MIN_NOTE_RES){
-//				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
-//			}
 		}
-		if (window < TEMPO_MIN_REQ_CHORDS){
+		if (window < TEMPO_MIN_INTERVALS){
 			return -1;
 		}
-		return (int)(tempos.ml_aggregate(0.0).center());
+		tempo = update_tempo_history(tempo_history, (int)(tempos.ml_aggregate(0.0).center()),
+				curr_tempo);
+		return tempo;
 	}
 	
+	/**
+	 * Inserts the clustered time interval's tempo, as well as any power-of-2 images
+	 * (the weighting of these images decay, to reduce the chance of aliasing)
+	 * @param clusters
+	 * @param time_length
+	 * @param weight
+	 * @param tolerance
+	 */
 	private static void tempo_pow2_insert(ClusterList clusters, long time_length,
 			int weight, int tolerance){
 		long tempo = 60000000 / time_length; /* usecs to bpm */
 		long tmp, decay;
 		for (tmp = tempo, decay = 1; tmp < TEMPO_MIN; tmp *= 2, decay *= 2) { }
 		for (; tmp <= TEMPO_MAX; tmp *= 2, decay *= 2){
-			clusters.insert(new Cluster(tmp, (int)(weight/(decay/4+1))), tolerance);
+			clusters.insert(new Cluster(tmp, (int)(weight/(decay/2+1))), tolerance);
 		}
 		for (tmp = tempo/2, decay = 2; tmp > TEMPO_MAX; tmp /= 2, decay *= 2) { }
 		for (; tmp >= TEMPO_MIN; tmp /= 2, decay *= 2){
-			clusters.insert(new Cluster(tmp, (int)(weight/(decay/4+1))), tolerance);
+			clusters.insert(new Cluster(tmp, (int)(weight/(decay/2+1))), tolerance);
 		}
+	}
+	
+	/**
+	 * Updates the moving window of previous tempos
+	 * @param tempo_history the array storing the moving window
+	 * @param new_tempo the new tempo
+	 * @param curr_tempo the current average of the window
+	 * @return the updated average, with aliasing effects taken into account
+	 */
+	private static int update_tempo_history(ArrayList<Integer> tempo_history, int new_tempo,
+			int curr_tempo){
+		int curr_low, curr, curr_hi;
+		/* discard history if music stops */
+		if (new_tempo == -1){
+			tempo_history.clear();
+			return -1;
+		}
+		if (curr_tempo == -1){ curr_tempo = 0; }
+		if (tempo_history.isEmpty()){
+			tempo_history.add(new_tempo);
+			return new_tempo;
+		}
+		if (tempo_history.size() == TEMPO_CACHE_SIZE){
+			curr_tempo = curr_tempo * 5;
+			curr_tempo -= tempo_history.remove(0).intValue();
+		}
+		curr = curr_tempo / tempo_history.size();
+		curr_low = curr / 2; curr_hi = curr * 2;
+		tempo_history.add(new_tempo);
+		/* ignore any obvious aliasing */
+		if (new_tempo == curr || new_tempo == curr_hi || new_tempo == curr_low
+				|| new_tempo == curr_low + 1){
+			curr_tempo = curr;
+		} else {
+			curr_tempo += new_tempo;
+			if (curr_tempo != new_tempo){
+				curr_tempo /= tempo_history.size();
+			}
+		}
+		return curr_tempo;
 	}
 	
 	public static String get_chord_context_free (ArrayList<Note> notes, int min) {
