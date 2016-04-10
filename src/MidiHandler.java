@@ -94,9 +94,9 @@ public class MidiHandler {
 					print = false; break;
 				// add note to buffer when new note is input
 				case -112:
-					int tempo = Analyzer.get_tempo(Analyzer.get_time_signature(buffer.history), buffer.tempo_buffer, 4.5);
+					buffer.curr_tempo = Analyzer.get_tempo(buffer.tempo_buffer, buffer.tempo_history, buffer.curr_tempo);
 					if (message[2] > 0) {
-						System.out.println("Tempo: " + tempo + " BPM");
+						System.out.println("Tempo: " + buffer.curr_tempo + " BPM");
 						buffer.add_note(data1, true, data2, timeStamp);
 						print = true; break;
 					} else {

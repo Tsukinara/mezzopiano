@@ -10,7 +10,7 @@ public class Analyzer {
 	private final static int TEMPO_MAX = 200;
 	private final static int TEMPO_MIN_INTERVALS = 1;
 	private final static int TEMPO_CLUSTER_RADIUS = 10;
-	private final static double TEMPO_LOOKBEHIND = 4.0;
+	private final static double TEMPO_LOOKBEHIND = 4.5;
 	private final static int TEMPO_CACHE_SIZE = 5;
 	private final static int TEMPO_MIN_NOTE_RES = 75000; // 32nd notes in 4/4 @ 200 BPM
 	
