@@ -32,8 +32,10 @@ public class AppCore {
 	private final static Color harm_br = new Color(65, 136, 69);
 	private final static Color pedal_u = new Color(122, 180, 208);
 	private final static Color pedal_d = new Color(88, 141, 167);
+	private final static Color ui_icon = new Color(39, 73, 94);
 	private final static int w_lookup[] = { 1, 3, 4, 6, 8, 9, 11, 13, 15, 16, 18, 20, 21, 23, 25, 27, 28, 30, 32, 33, 35, 37, 39, 40, 42, 44, 45, 47, 49, 51, 52, 54, 56, 57, 59, 61, 63, 64, 66, 68, 69, 71, 73, 75, 76, 78, 80, 81, 83, 85, 87, 88 };
 	private final static int b_lookup[] = { 2, 5, 7, 10, 12, 14, 17, 19, 22, 24, 26, 29, 31, 34, 36, 38, 41, 43, 46, 48, 50, 53, 55, 58, 60, 62, 65, 67, 70, 72, 74, 77, 79, 82, 84, 86 };
+	public enum Mood { M_NEUTRAL, M_CHAOTIC, M_TRANQUIL, M_SAD, M_DRAMATIC, M_HAPPY };
 	
 	private Color p_color;
 	private LinearGradientPaint l1, l2, l3;
@@ -50,7 +52,10 @@ public class AppCore {
 	private double[] b_tl, b_tr, b_bl, b_br;
 	private Harmonizer synth;
 	private Font anal_base;
-	private int kkey;
+	private Font mood_base;
+	private int kkey, c_temp, t_temp, c_fan, t_fan;
+	private Mood mood;
+	private String mood_name;
 	boolean harm;
 	
 	public AppCore(Display parent) {
@@ -73,6 +78,8 @@ public class AppCore {
 		this.curr_state = 0;
 		this.flag_analysis = false;
 		this.p_color = pedal_u;
+		this.mood = Mood.M_NEUTRAL;
+		this.mood_name = get_mood_name();
 		this.w_tl = new double[52]; this.w_tr = new double[52];
 		this.w_bl = new double[52]; this.w_br = new double[52];
 		this.b_tl = new double[36]; this.b_tr = new double[36];	
@@ -96,6 +103,7 @@ public class AppCore {
 			}
 		}
 		this.anal_base = new Font("Plantin MT Std", Font.PLAIN, sH(40));
+		this.mood_base = new Font("Plantin MT Std", Font.PLAIN, sH(54));
 		this.alpha = 255;	this.alpha2 = 0; this.alpha3 = 255;
 		
 		Point2D start = new Point2D.Float(sX(0), sY(0));
@@ -190,37 +198,25 @@ public class AppCore {
 		
 		if (parent.set.tsig != null) g.drawString(parent.set.tsig.getTS(), sX(nx), sY(308.3));
 		
-		if (nb.curr_chord != null) nb.curr_chord.draw_roman(g, sX(1920/2), sY(288), sH(154));
+		g.drawImage(parent.get_images().get("ICON_TM"), sX(672), sY(148), sW(65), sH(65), null);
+		g.drawImage(parent.get_images().get("ICON_LT"), sX(837), sY(148), sW(65), sH(65), null);
+		g.drawImage(parent.get_images().get("ICON_FN"), sX(1002), sY(148), sW(65), sH(65), null);
+		g.drawImage(parent.get_images().get("ICON_NS"), sX(1168), sY(148), sW(65), sH(65), null);
+		draw_ambiance(g);
 		
 		g.setColor(new Color(129, 164, 207));
 		g.fillRect(sX(1320), sY(140), sW(600), sH(66));
 		
 		g.setColor(parent.bg_color);
 		g.setFont(anal_base);
-		fw = g.getFontMetrics().stringWidth("predicted chords");
-		g.drawString("predicted chords", sX(1320) + (sX(600)-fw)/2, sY(186));
+		fw = g.getFontMetrics().stringWidth("best guess for mood:");
+		g.drawString("best guess for mood:", sX(1320) + (sX(600)-fw)/2, sY(186));
 		
-		if (next_chords != null) {
-			System.out.println(next_chords.toString());
-			int i = 1;
-			System.out.println(next_chords.keySet());
-			for (Chord c : next_chords.keySet()) {
-				g.setColor(parent.bg_color);
-				int x = 1320 + i*600/4;
-				c.draw_roman(g, sX(x), sY(265), sH(52));
-				i = i+1;
-				
-				g.setFont(new Font("Plantin MT Std", Font.PLAIN, sH(44)));
-				g.setColor(new Color(54, 88, 108));
-				String prob = (int)(100.0*next_chords.get(c)) + "%";
-				fw = g.getFontMetrics().stringWidth(prob);
-				g.drawString(prob, sX(x)-fw/2, sY(325));
-				
-				if (i > 3) break;
-			}
-		}
-
-//		g.setFont(new Font("Plantin MT Std", Font.PLAIN, 18));
+		g.setFont(mood_base);
+		fw = g.getFontMetrics().stringWidth(mood_name);
+		g.drawString(mood_name, sX(1320) + (sX(600)-fw)/2, sY(273));
+		
+		//		g.setFont(new Font("Plantin MT Std", Font.PLAIN, 18));
 //		g.drawString("DOM:" + Music.getNoteName(nb.dom()), sX(1320), sY(220));
 //		g.drawString(nb.bass.toString(), sX(1320), sY(255));
 //		g.drawString(nb.rel_buffer.toString(), sX(1320), sY(290));
@@ -239,6 +235,24 @@ public class AppCore {
 			tmp += g.getFontMetrics().stringWidth(k.get_type()) + sW(10);
 			g.setFont(anal_base);
 			g.drawString(" " + k.get_maj_min(), sX(tmp), sY(194));
+		}
+	}
+	
+	private void draw_ambiance(Graphics2D g) {
+		switch (this.mood) {
+		case M_NEUTRAL:
+			
+			break;
+		case M_CHAOTIC:
+			break;
+		case M_HAPPY:
+			break;
+		case M_SAD:
+			break;
+		case M_TRANQUIL:
+			break;
+		case M_DRAMATIC:
+			break;
 		}
 	}
 	
@@ -345,7 +359,7 @@ public class AppCore {
 	public void handle(KeyEvent e) {
 		switch (e.getKeyCode()) {
 			case KeyEvent.VK_ESCAPE: case KeyEvent.VK_X: if (curr_state == 1) curr_state = 2; break;
-			case KeyEvent.VK_R: nb.reinit(); break;
+			case KeyEvent.VK_R: nb.reinit(); init_values(); break;
 			case KeyEvent.VK_SPACE: parent.reset(); break;
 		}
 	}
@@ -445,6 +459,18 @@ public class AppCore {
 		for (int i = 0; i < arr.length; i++) 
 			if (arr[i] == val) return i; 
 		return -1; 
+	}
+	
+	private String get_mood_name() {
+		String mname = "";
+		switch (mood) {
+		case M_SAD: return "melancholic";
+		case M_HAPPY: return "jubliant";
+		case M_TRANQUIL: return "tranquil";
+		case M_CHAOTIC: return "chaotic";
+		case M_DRAMATIC: return "dramatic";
+		default: return "neutral";
+		}
 	}
 	
 	public void note_released(byte id, long timestamp) {}

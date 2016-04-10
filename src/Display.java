@@ -65,7 +65,7 @@ public class Display extends JFrame implements Runnable {
 
 	public Display() {
 		super(DEFAULT_TITLE);
-		this.state = State.LOADING;
+		this.state = State.MENU;
 		this.sfxplayer = null; this.mscplayer = null;
 		this.width = s_width; this.height = s_height;
 		this.set = new Settings(new File(settings));
@@ -208,6 +208,16 @@ public class Display extends JFrame implements Runnable {
 			images.put("LOAD_BG", ImageIO.read(new File(img_path + "load_bg.png")));
 			images.put("LOGO_BK", ImageIO.read(new File(img_path + "logo_bk.png")));
 			images.put("LOGO_WH", ImageIO.read(new File(img_path + "logo_wh.png")));
+			images.put("ICON_TM", ImageIO.read(new File(img_path + "icon_tm.png")));
+			images.put("ICON_LT", ImageIO.read(new File(img_path + "icon_lt.png")));
+			images.put("ICON_FN", ImageIO.read(new File(img_path + "icon_fn.png")));
+			images.put("ICON_NS", ImageIO.read(new File(img_path + "icon_ns.png")));
+			images.put("ICON_RN", ImageIO.read(new File(img_path + "icon_rn.png")));
+			images.put("ICON_TD", ImageIO.read(new File(img_path + "icon_td.png")));
+			images.put("ICON_WD", ImageIO.read(new File(img_path + "icon_wd.png")));
+			images.put("ICON_BD", ImageIO.read(new File(img_path + "icon_bd.png")));
+			images.put("ICON_NA", ImageIO.read(new File(img_path + "icon_na.png")));
+			
 			images.put("FR_ICON", ImageIO.read(new File("resources\\icons\\icon.png")));
 
 		} catch (IOException|FontFormatException e) {

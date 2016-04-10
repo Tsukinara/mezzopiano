@@ -6,7 +6,8 @@ public class KeySignature {
 	
 	public KeySignature(String name, boolean major) {
 		this.major = major;
-
+		if (name.length() > 0) this.key = name.charAt(0);
+		else this.key = 'C';
 		if (major && key > 90) key = (char)(key-32);
 		if (!major && key < 96) key = (char)(key+32);
 		if (name.length() > 1)

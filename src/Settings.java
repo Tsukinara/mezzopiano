@@ -110,7 +110,7 @@ public class Settings {
 		if (bgm_vol < 0) bgm_vol = 0;
 		if (bgm_vol > 100) bgm_vol = 100;
 		if (tempo < 40 && tempo != -1) tempo = 40;
-		
+		System.out.println("skey: " + skey + " smaj: " + smaj);
 		if (skey.equals("null")) this.ksig = null;
 		else this.ksig = new KeySignature(skey, smaj);
 		} catch (Exception e) {
