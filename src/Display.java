@@ -52,6 +52,7 @@ public class Display extends JFrame implements Runnable {
 	protected Settings set;
 	protected Snow[] snow;
 	protected ArrayList<String> profiles;
+	protected HardwareInterface hint;
 	
 	private Profile prof;
 	private NoteBuffer buffer;
@@ -98,6 +99,7 @@ public class Display extends JFrame implements Runnable {
 
 		this.curr = new Thread(this);
 		this.curr.start();
+		startHardwareInterface();
 
 		addKeyListener(new KeyListener() {
 			public void keyPressed(KeyEvent e) {
@@ -179,6 +181,16 @@ public class Display extends JFrame implements Runnable {
 			case SETTINGS: s_sm.damp_pressed(timestamp); break;
 			case PROFILE: s_ps.damp_pressed(timestamp); break;
 		}		
+	}
+	
+	private void startHardwareInterface() {
+		Thread t = new Thread() {
+			public void run() {
+				hint = new HardwareInterface();
+				hint.initialize();
+			}
+		};
+		t.run();
 	}
 	
 	public void damp_released(long timestamp) {
