@@ -64,52 +64,48 @@ public class Analyzer {
 		return null;
 	}
 	
-	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history, int winsize) {
+	public static int get_tempo(TimeSignature ts, ArrayList<Note> note_history, double lookbehind) {
 		ClusterList tempos;
 		long diff, sustain;
-		int weight, window, winstart;
-		window = Math.min(note_history.size(), winsize);
-		if (window < TEMPO_MIN_REQ_CHORDS){
-			return -1;
-		}
-		winstart = note_history.size() - window;
+		int weight, window = 0;
+		System.out.println("his_size: " + note_history.size());
 		tempos = new ClusterList();
 		/*
 		 * Pseudo k-means (because unbounded performance in real-time code is garbage)
 		 * compute based on time between notes as well as how long notes are held
 		 */
-		for (int i = note_history.size()-2; i >= winstart; i--){
+		for (int i = note_history.size()-2; i >= 0 && lookbehind > 0; i--){
 			diff = note_history.get(i+1).get_start() - note_history.get(i).get_start();
-			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
+//			sustain = note_history.get(i).get_end() - note_history.get(i).get_start();
 			weight = note_history.get(i).vel() + note_history.get(i+1).vel();
+			//System.out.println("diff: " + diff + "\tsustain: " + '0' + "\tweight: " + weight);
 			if (diff >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS);
-			} else {
-				if (winstart > 0){
-					winstart--;
-				} else {
-					window--;
-				}
+				lookbehind -= (double)diff / 1000000;
+				window++;
 			}
 			/* weight the sustains less */
-			if (sustain >= TEMPO_MIN_NOTE_RES){
-				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
-			}
+//			if (sustain >= TEMPO_MIN_NOTE_RES){
+//				tempo_pow2_insert(tempos, sustain, weight / 4, TEMPO_CLUSTER_RADIUS);
+//			}
 		}
 		if (window < TEMPO_MIN_REQ_CHORDS){
 			return -1;
 		}
-		return (int)(tempos.aggregate(0.0).center());
+		return (int)(tempos.ml_aggregate(0.0).center());
 	}
 	
 	private static void tempo_pow2_insert(ClusterList clusters, long time_length,
 			int weight, int tolerance){
 		long tempo = 60000000 / time_length; /* usecs to bpm */
-		for (long tmp = tempo; tmp <= TEMPO_MAX; tmp *= 2){
-			clusters.insert(new Cluster(tmp, weight), tolerance);
+		long tmp, decay;
+		for (tmp = tempo, decay = 1; tmp < TEMPO_MIN; tmp *= 2, decay *= 2) { }
+		for (; tmp <= TEMPO_MAX; tmp *= 2, decay *= 2){
+			clusters.insert(new Cluster(tmp, (int)(weight/(decay/4+1))), tolerance);
 		}
-		for (long tmp = tempo/2; tmp >= TEMPO_MIN; tmp /= 2){
-			clusters.insert(new Cluster(tmp, weight), tolerance);
+		for (tmp = tempo/2, decay = 2; tmp > TEMPO_MAX; tmp /= 2, decay *= 2) { }
+		for (; tmp >= TEMPO_MIN; tmp /= 2, decay *= 2){
+			clusters.insert(new Cluster(tmp, (int)(weight/(decay/4+1))), tolerance);
 		}
 	}
 	

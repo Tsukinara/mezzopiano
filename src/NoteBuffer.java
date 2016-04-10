@@ -71,6 +71,7 @@ public class NoteBuffer {
 	public synchronized void add_note(byte id, boolean damped, byte vel, long time) {
 		Note n = new Note(id, vel, damped, time, this);
 		Note tmp = null;
+		add_circular(tempo_buffer, new Note(id, vel, damped, time, this));
 		for (Note nt : note_buffer) {
 			if (nt.id() == id) tmp = nt;
 		}
@@ -88,7 +89,6 @@ public class NoteBuffer {
 		note_buffer.remove(tmp);
 		note_buffer.add(n);
 		hold_buffer.add(n);
-		add_circular(tempo_buffer, n);
 		all_buffer.add(n);
 		add_history(n);
 		add_akey(n);
@@ -113,10 +113,8 @@ public class NoteBuffer {
 	}
 	
 	private synchronized void add_circular(ArrayList<Note> arr, Note n){
-		if (arr.size() == max_notes){
-			destroy_note(arr.remove(0));
-			arr.add(n);
-		}
+		if (arr.size() == max_notes) { destroy_note(arr.remove(0)); }
+		arr.add(n);
 	}
 	
 	private synchronized void add_history(Note n) {

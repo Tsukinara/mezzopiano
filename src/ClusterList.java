@@ -13,6 +13,9 @@ public class ClusterList {
 	}
 	public void insert(Cluster cl, int tolerance){
 		int comp;
+		if (cl.total_weight == 0){
+			return;
+		}
 		if (clusters.isEmpty()){
 			clusters.add(cl);
 			return;
@@ -30,7 +33,7 @@ public class ClusterList {
 		}
 		clusters.add(cl);
 	}
-	public Cluster aggregate(double tolerance){
+	public Cluster ml_aggregate(double tolerance){
 		ArrayList<Cluster> tmp;
 		Cluster to_ret = null;
 		long tol;
@@ -44,7 +47,8 @@ public class ClusterList {
 				@Override
 				public int compare(Cluster o1, Cluster o2) {
 					return (int)(o2.total_weight - o1.total_weight);
-				}});
+				}
+			});
 			to_ret = tmp.get(0);
 			tol = (long) (tolerance * to_ret.total_weight);
 			/* maybe do some merging / preference to things closer to 120 bpm? */

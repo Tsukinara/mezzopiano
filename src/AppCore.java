@@ -410,6 +410,7 @@ public class AppCore {
 		adjust_tempo();
 		pedal_color();
 		kkey = (nb.curr_key == null? -999 : Music.getKey(nb.curr_key.key + "" + nb.curr_key.type));
+		if (Analyzer.get_mood() != mood);
 		switch (curr_state) {
 			case 0: // transition in;
 				alpha2 = (short)(alpha2-dA < 0 ? 0 : alpha2-dA);
