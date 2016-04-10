@@ -26,13 +26,6 @@ public class Analyzer {
 			return AppCore.Mood.M_CHAOTIC;
 		}
 		System.out.println(tempo + "\t" + mode + "\t" + vel);
-		if (check_toggle(nb.hold_buffer)){
-			nb.toggle = !nb.toggle;
-		}
-		if (nb.toggle){
-			nb.curr_mood = check_mood(nb.hold_buffer, nb.curr_mood);
-			return nb.curr_mood;
-		}
 		switch (mode){
 		case 0: //major
 			if (vel > 55){
@@ -70,28 +63,7 @@ public class Analyzer {
 		return to_ret;
 	}
 	
-	private static boolean check_toggle(ArrayList<Note> hold_buffer){
-		boolean to_ret = false;
-		for (Note n:hold_buffer){
-			to_ret |= (n.value() == 14);
-		}
-		return to_ret;
-	}
-	
-	private static AppCore.Mood check_mood(ArrayList<Note> hold_buffer, AppCore.Mood curr_mood){
-		AppCore.Mood to_ret = curr_mood;
-		for (Note n:hold_buffer){
-			switch (n.value()){
-			case 8: to_ret = AppCore.Mood.M_NEUTRAL; break;
-			case 9: to_ret = AppCore.Mood.M_HAPPY; break;
-			case 10: to_ret = AppCore.Mood.M_SAD; break;
-			case 11: to_ret = AppCore.Mood.M_DRAMATIC; break;
-			case 12: to_ret = AppCore.Mood.M_TRANQUIL; break;
-			}
-		}
-		return to_ret;
-	}
-	
+
 	private static int get_mean_vel(ArrayList<Note> note_history){
 		double window_duration = 0.0, reftime = 0.0;
 		int vel = 0, ct = 0;
@@ -323,8 +295,8 @@ public class Analyzer {
 	public static String get_chord_context_free (ArrayList<Note> notes, int min) {
 		ArrayList<Integer> unique = new ArrayList<Integer>();
 		for (Note n : notes) if (!unique.contains(n.key())) unique.add(n.key());
-		if (unique.size() > 4) return "unknown0";
-		if (unique.size() < min) return "unknown9";
+		if (unique.size() > 4) return "unknown";
+		if (unique.size() < min) return "unknown";
 		Integer [] uniq = unique.toArray(new Integer [unique.size()]);
 		int triad = get_triad(uniq); String ret = "";
 		if (triad < 0) {

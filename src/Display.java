@@ -55,7 +55,7 @@ public class Display extends JFrame implements Runnable {
 	protected HardwareInterface hint;
 	
 	private Profile prof;
-	private NoteBuffer buffer;
+	protected NoteBuffer buffer;
 	private Thread curr;
 	public State state;
 	
@@ -66,7 +66,7 @@ public class Display extends JFrame implements Runnable {
 
 	public Display() {
 		super(DEFAULT_TITLE);
-		this.state = State.MENU;
+		this.state = State.LOADING;
 		this.sfxplayer = null; this.mscplayer = null;
 		this.width = s_width; this.height = s_height;
 		this.set = new Settings(new File(settings));

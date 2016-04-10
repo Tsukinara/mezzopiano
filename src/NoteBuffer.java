@@ -41,7 +41,6 @@ public class NoteBuffer {
 	public KeySignature curr_key;
 	
 	public AppCore.Mood curr_mood;
-	public boolean toggle;
 	
 	/*
 	 * Initializes the note buffer, as well as the hold buffer
@@ -69,7 +68,6 @@ public class NoteBuffer {
 		this.tempo_history = new ArrayList<Integer>();
 		this.curr_tempo = -1;
 		this.curr_mood = AppCore.Mood.M_NEUTRAL;
-		this.toggle = false;
 	}
 	
 	/*

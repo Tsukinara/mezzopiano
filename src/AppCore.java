@@ -18,7 +18,7 @@ public class AppCore {
 	private final static double btx_s = 172.9, btx_e = 1698.8, btx_w = 18.66;
 	private final static double bbx_s = 115.7, bbx_e = 1750.8, bbx_w = 20.0;
 	private final static int wty = 780, wby = 919, wly = 959, bly = 868, anal_s = 358;
-	private final static int r_al = 166;
+	private final static int r_al = 166, v_thr = 100;
 	private final static Color anal_a = new Color(180, 218, 237);
 	private final static Color anal_b = new Color(224, 236, 250);
 	private final static Color pian_a = new Color(149, 198, 223);
@@ -45,7 +45,6 @@ public class AppCore {
 	private Color p_color, t_color; protected Color c_color;
 	private LinearGradientPaint l1, l2, l3;
 	private ArrayList<Integer> start, end, key;
-	private HashMap<Chord, Double> next_chords;
 	private ArrayList<Color> histc;
 	private short curr_state, alpha, alpha2, alpha3, alpha_m, bar_h1, bar_h2, bar_max, delay;
 	private short num_beats, beat, bcount;
@@ -60,7 +59,7 @@ public class AppCore {
 	private int kkey;
 	private Mood mood;
 	private String mood_name, mood_p, color_type, mood_icon, ctype_p, micon_p;
-	boolean harm;
+	boolean harm, toggle, toggle2;
 	
 	public AppCore(Display parent) {
 		this.parent = parent;
@@ -80,9 +79,9 @@ public class AppCore {
 		this.bar_h1 = 115; this.bar_h2 = 50; this.bar_max = 115;
 		this.delay = 300/20;	this.theta = (float)Math.PI;
 		this.curr_state = 0;
-		this.flag_analysis = false;
+		this.flag_analysis = false; this.toggle = true; this.toggle2 = false;
 		this.p_color = pedal_u;
-		this.mood = Mood.M_NEUTRAL;
+		this.mood = Mood.M_NEUTRAL; 
 		this.mood_name = get_mood_name();
 		this.w_tl = new double[52]; this.w_tr = new double[52];
 		this.w_bl = new double[52]; this.w_br = new double[52];
@@ -112,9 +111,10 @@ public class AppCore {
 		this.alpha = 255;	this.alpha2 = 0; this.alpha3 = 255; this.alpha_m = 255;
 		this.c_temp = 70; this.c_fan = 0;
 		this.t_temp = 70; this.t_fan = 0;
+		this.mood_p = "neutral"; this.mood_name = "neutral";
 		this.color_type = "clear"; this.mood_icon = "ICON_NA";
 		this.ctype_p = "clear"; this.micon_p = "ICON_NA";
-		this.t_color = cS(Color.WHITE, 127); this.c_color = cS(Color.BLACK, 127);
+		this.t_color = cS(Color.WHITE, v_thr); this.c_color = cS(Color.BLACK, v_thr);
 		
 		Point2D start = new Point2D.Float(sX(0), sY(0));
 		Point2D end = new Point2D.Float(sX(0), sY(1080));
@@ -222,10 +222,7 @@ public class AppCore {
 		g.setFont(anal_base);
 		fw = g.getFontMetrics().stringWidth("best guess for mood:");
 		g.drawString("best guess for mood:", sX(1320) + (sX(600)-fw)/2, sY(186));
-		
-		g.setFont(mood_base);
-		fw = g.getFontMetrics().stringWidth(mood_name);
-		g.drawString(mood_name, sX(1320) + (sX(600)-fw)/2, sY(283));
+
 		
 		//		g.setFont(new Font("Plantin MT Std", Font.PLAIN, 18));
 //		g.drawString("DOM:" + Music.getNoteName(nb.dom()), sX(1320), sY(220));
@@ -236,8 +233,11 @@ public class AppCore {
 	
 	private void draw_ksig(Graphics2D g, KeySignature k) {
 		int nx = r_al + 40;
+		if (Analyzer.get_maj_min(parent.buffer.chord_history) == 0) {
+			k = new KeySignature("C", true);
+		} else k = new KeySignature("A", false);
 		if (k.get_type().equals("")) 
-			g.drawString(k.get_base() + " " + k.get_maj_min(), sX(nx), sY(194));
+			g.drawString(k.get_base() + " " + k.get_maj_min(), sX(nx), sY(194));		
 		else {
 			g.drawString(k.get_base(), sX(nx), sY(194));
 			int tmp = nx + g.getFontMetrics().stringWidth(k.get_base()) + sW(14);
@@ -257,6 +257,9 @@ public class AppCore {
 		g.drawString((int)c_fan + "%", sX(1043)-fw/2, sY(304));
 		if (alpha3 == 0) {
 			g.setComposite(AlphaComposite.SrcOver.derive(1f - alpha_m/255f));
+			g.setFont(mood_base);
+			fw = g.getFontMetrics().stringWidth(mood_p);
+			g.drawString(mood_p, sX(1320) + (sX(600)-fw)/2, sY(283));
 			fw = g.getFontMetrics().stringWidth(ctype_p);
 			g.drawString(ctype_p, sX(877)-fw/2, sY(304));
 			g.drawImage(parent.get_images().get(micon_p), sX(1176), sY(253), sH(65), sW(65), null);
@@ -264,6 +267,9 @@ public class AppCore {
 			fw = g.getFontMetrics().stringWidth(color_type);
 			g.drawString(color_type, sX(877)-fw/2, sY(304));
 			g.drawImage(parent.get_images().get(mood_icon), sX(1176), sY(253), sH(65), sW(65), null);
+			g.setFont(mood_base);
+			fw = g.getFontMetrics().stringWidth(mood_name);
+			g.drawString(mood_name, sX(1320) + (sX(600)-fw)/2, sY(283));
 		}
 	}
 	
@@ -382,6 +388,7 @@ public class AppCore {
 			case KeyEvent.VK_G: set_mood(Mood.M_TRANQUIL);  break;
 			case KeyEvent.VK_H: set_mood(Mood.M_NEUTRAL); break;
 			case KeyEvent.VK_ENTER: flag_analysis = true; break;
+			case KeyEvent.VK_Q: toggle2 = !toggle2;
 		}
 	}
 	
@@ -424,7 +431,6 @@ public class AppCore {
 	public void chord_changed() {
 		if (bcount < 8 && (beat == 2 || beat == 0)) bcount = 0;
 		else { beat = 0; bcount = 0; }
-		next_chords = parent.profile().next_chords(nb.curr_chord, 4);
 	}
 	
 	public void step() {
@@ -432,7 +438,8 @@ public class AppCore {
 		adjust_color();
 		pedal_color();
 		kkey = (nb.curr_key == null? -999 : Music.getKey(nb.curr_key.key + "" + nb.curr_key.type));
-		//if (Analyzer.get_mood() != mood) { set_mood(Analyzer.get_mood()); }
+		if (!toggle && !toggle2) { Mood m = Analyzer.get_mood(parent.buffer()); 
+		if (m != this.mood) { set_mood(m); } }
 		switch (curr_state) {
 			case 0: // transition in;
 				alpha2 = (short)(alpha2-dA < 0 ? 0 : alpha2-dA);
@@ -447,7 +454,7 @@ public class AppCore {
 				if (c_temp > t_temp) c_temp = (c_temp - dTm < t_temp ? t_temp : c_temp - dTm);
 				if (c_fan < t_fan) c_fan = (c_fan + dF > t_fan ? t_fan : c_fan + dF);
 				if (c_fan > t_fan) c_fan = (c_fan - dF < t_fan ? t_fan : c_fan - dF);
-				if (mood == Mood.M_CHAOTIC && Math.random() < .01) set_mood(Mood.M_CHAOTIC); 
+				if (mood == Mood.M_CHAOTIC && Math.random() < .02) set_mood(Mood.M_CHAOTIC); 
 				mellifluity(); 	history_step();	
 				break;
 			case 2: // transition out
@@ -478,7 +485,7 @@ public class AppCore {
 			this.t_temp = 70; this.t_fan = 10;
 			this.mood_icon = "ICON_NA";
 			this.color_type = "clear";
-			this.t_color = cS(Color.WHITE, 127);
+			this.t_color = cS(Color.WHITE, v_thr);
 			break;
 		case M_CHAOTIC:
 			this.t_temp = (int)(Math.random()*10.0+74);
@@ -486,42 +493,58 @@ public class AppCore {
 			int tmp = (int)(Math.random()*4);
 			this.mood_icon = (tmp == 0?"ICON_RN":(tmp == 1?"ICON_WD":(tmp == 2?"ICON_TD":"ICON_BD")));
 			this.color_type = "rand";
-			this.t_color = cS(new Color((int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255)), 127);
+			this.t_color = cS(new Color((int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255)), v_thr);
 			break;
 		case M_HAPPY:
 			this.t_temp = 74; this.t_fan = 85;
 			this.mood_icon = "ICON_BD";
 			this.color_type = "warm";
-			this.t_color = cS(new Color(255, 127, 0), 127);
+			this.t_color = cS(new Color(255, 127, 0), v_thr);
 			break;
 		case M_SAD:
 			this.t_temp = 65; this.t_fan = 5;
 			this.mood_icon = "ICON_RN";
 			this.color_type = "cool";
-			this.t_color = cS(new Color(0, 127, 255), 127);
+			this.t_color = cS(new Color(0, 127, 255), v_thr);
 			break;
 		case M_TRANQUIL:
 			this.t_temp = 68; this.t_fan = 30;
 			this.color_type = "gentle";
 			this.mood_icon = "ICON_WD";
-			this.t_color = cS(new Color(127, 255, 255), 127);
+			this.t_color = cS(new Color(127, 255, 255), v_thr);
 			break;
 		case M_DRAMATIC:
 			this.t_temp = 71; this.t_fan = 100;
 			this.mood_icon = "ICON_TD";
 			this.color_type = "intense";
-			this.t_color = cS(new Color(255, 127, 255), 127);
+			this.t_color = cS(new Color(255, 127, 255), v_thr);
 			break;
 		}
 		this.mood_name = get_mood_name();
 	}
 	
 	public synchronized void note_pressed(byte id, byte vel, long timestamp) {
+		int r = t_color.getRed(); int g = t_color.getGreen(); int b = t_color.getBlue();
+		r = r*(vel)/v_thr + r; g = g*(vel)/v_thr + g; b = b*(vel)/v_thr + b;
+		if (r > 255) r = 255; if (g > 255) g = 255; if (b > 255) b = 255;
+		c_color = new Color(r, g, b);
 		if (vel > vel_thresh && curr_state > 0) {
 			flag_analysis = true;
 			start.add(wty); end.add(wty); key.add((int)id - 20);
 			if (has(w_lookup, (int)id - 20)) histc.add(new Color(68, 104, 148));
 			else histc.add(new Color(34, 70, 113));
+		}
+		if (toggle && !toggle2) {
+			System.out.println(id);
+			switch (id) {
+			case 28: set_mood(Mood.M_NEUTRAL); break;
+			case 29: set_mood(Mood.M_TRANQUIL); break;
+			case 30: set_mood(Mood.M_SAD); break;
+			case 31: set_mood(Mood.M_HAPPY); break;
+			case 32: set_mood(Mood.M_DRAMATIC); break;
+			case 34: toggle = !toggle; break;
+			case 35: set_mood(Mood.M_CHAOTIC); break;
+			}
 		}
 	}
 	

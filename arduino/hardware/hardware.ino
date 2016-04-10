@@ -1,8 +1,8 @@
 #include <Servo.h>
 
-#define REDBUTTON 2
-#define GREENBUTTON 0
-#define BLUEBUTTON 4
+#define REDBUTTON 13
+#define GREENBUTTON 12
+#define BLUEBUTTON 8
 #define FAN 5
 #define SERVO 9
 #define RED 3

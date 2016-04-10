@@ -344,10 +344,23 @@ public class Menu {
 	}
 	
 	public void note_pressed(byte id, byte vel, long timestamp) {
-
+		String c = Analyzer.get_chord_context_free(parent.buffer().hold_buffer, 3);
+		if (c.contains("Cmaj")) {
+			if (curr_state == 1) {
+				switch (curr_opt) {
+					case 0: sel_y = get_opt_y(); curr_state = 2; next_state = Display.State.PROFILE; break;
+					case 1: sel_y = get_opt_y(); next_state = Display.State.SETTINGS; curr_state = 4; break;
+					case 2: sel_y = get_opt_y(); curr_state = 5;
+				}
+			}
+		}
+		else if (c.contains("Amin")) { if (curr_state < 2) curr_opt = 2; }
+		else if (c.contains("Fmaj")) { if (curr_state < 2) curr_opt = (short)(curr_opt + 1 > max_opt ? max_opt : curr_opt + 1); } 
+		else if (c.contains("Gmaj")) { if (curr_state < 2) curr_opt = (short)(curr_opt - 1 < 0 ? 0 : curr_opt - 1); }
 	}
 	
 	public void note_released(byte id, long timestamp) {}
+	
 	public void damp_pressed(long timestamp) {}
 	public void damp_released(long timestamp) {}
 	
