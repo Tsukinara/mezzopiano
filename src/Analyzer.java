@@ -6,18 +6,91 @@ public class Analyzer {
 	protected final static int[] maj_arr = {2, 4, 5, 7, 9, 11};
 	protected final static int[] min_arr = {2, 3, 5, 7, 8, 11};
 	private final static int ret = 7;
+	private final static double VELOCITY_LOOKBEHIND = 1.0;
 	private final static int MODE_WINDOW = 8;
 	private final static int TEMPO_MIN = 40;
-	private final static int TEMPO_MAX = 200;
+	private final static int TEMPO_MAX = 160;
 	private final static int TEMPO_MIN_INTERVALS = 1;
 	private final static int TEMPO_CHORD_WEIGHT = 64;
-	private final static int TEMPO_CLUSTER_RADIUS = 10;
+	private final static int TEMPO_CLUSTER_RADIUS = 4;
 	private final static double TEMPO_LOOKBEHIND = 4.5;
 	private final static int TEMPO_CACHE_SIZE = 4;
 	private final static int TEMPO_MIN_NOTE_RES = 75000; // 32nd notes in 4/4 @ 200 BPM
 	
-	public static AppCore.Mood get_mood(){
-		return AppCore.Mood.M_NEUTRAL;
+	public static AppCore.Mood get_mood(NoteBuffer nb){
+		AppCore.Mood to_ret =  AppCore.Mood.M_NEUTRAL;
+		int tempo = get_tempo(nb.tempo_buffer, nb.chord_history_t, nb.tempo_history);
+		int mode = get_maj_min(nb.chord_history);
+		int vel = get_mean_vel(nb.tempo_buffer);
+		if (is_chaotic(nb.hold_buffer)){
+			return AppCore.Mood.M_CHAOTIC;
+		}
+		System.out.println(tempo + "\t" + mode + "\t" + vel);
+		switch (mode){
+		case 0: //major
+			if (tempo >= 120){
+				to_ret = AppCore.Mood.M_HAPPY;
+			} else {
+				if (vel > 65){
+					to_ret = AppCore.Mood.M_NEUTRAL;
+				} else {
+					to_ret = AppCore.Mood.M_TRANQUIL;
+				}
+			}
+			break;
+		case 1: //minor
+			if (tempo >= 120){
+				if (vel > 80){
+					to_ret = AppCore.Mood.M_DRAMATIC;
+				} else if (vel > 70){
+					to_ret = AppCore.Mood.M_NEUTRAL;
+				} else {
+					to_ret = AppCore.Mood.M_SAD;
+				}
+			} else {
+				if (vel > 80){
+					to_ret = AppCore.Mood.M_SAD;
+				} else {
+					to_ret = AppCore.Mood.M_TRANQUIL;
+				}
+			}
+			break;
+		default:
+		}
+		return to_ret;
+	}
+	
+	private static int get_mean_vel(ArrayList<Note> note_history){
+		double window_duration = 0.0, reftime = 0.0;
+		int vel = 0, ct = 0;
+		boolean first = true;
+		for (int i = note_history.size() - 1; i >= 0
+				&& window_duration < VELOCITY_LOOKBEHIND; i--){
+			vel += note_history.get(i).vel();
+			if (first){
+				reftime = (double)note_history.get(i).get_start() / 1000000;
+			} else {
+				window_duration = reftime - ((double)note_history.get(i).get_start()/1000000);
+			}
+			ct++;
+			first = false;
+		}
+		return (ct > 0)? (vel / ct) : 0;
+	}
+	
+	private static boolean is_chaotic(ArrayList<Note> hold_buffer){
+		return hold_buffer.size() > 9;
+//		int octave_count[] = new int[12];
+//		int sum = 0;
+//		for (Note n:hold_buffer){
+//			if (octave_count[n.key()] == 0){
+//				octave_count[n.key()] = 1;
+//			}
+//		}
+//		for (int i:octave_count){
+//			sum += i;
+//		}
+//		return sum > 5;
 	}
 	
 	public static KeySignature get_key_signature(ArrayList<Note> history, KeySignature curr) {
@@ -94,7 +167,7 @@ public class Analyzer {
 		return null;
 	}
 	
-	public static int get_tempo(ArrayList<Note> note_history, ArrayList<Long> chord_t_history,
+	public static int get_tempo(ArrayList<Note> note_history, ArrayList<Long> chord_history_t,
 			ArrayList<Integer> tempo_history) {
 		ClusterList tempos;
 		Note curr, prev;
@@ -108,15 +181,15 @@ public class Analyzer {
 		 */
 		carry = 0;
 		lookbehind = TEMPO_LOOKBEHIND;
-		for (int i = chord_t_history.size()-2; i >= 0 && lookbehind > 0; i--){
-			diff = chord_t_history.get(i+1) - chord_t_history.get(i) + carry;
+		for (int i = chord_history_t.size()-2; i >= 0 && lookbehind > 0; i--){
+			diff = chord_history_t.get(i+1) - chord_history_t.get(i) + carry;
 			weight = TEMPO_CHORD_WEIGHT;
 			if (diff >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS, false);
 				carry = 0;
 				window++;
 			} else {
-				carry += diff / 2;
+				carry = diff / 2;
 			}
 			lookbehind -= (double)diff / 1000000;
 		}
@@ -125,13 +198,13 @@ public class Analyzer {
 		for (int i = note_history.size()-2; i >= 0 && lookbehind > 0; i--){
 			curr = note_history.get(i+1); prev = note_history.get(i);
 			diff = curr.get_start() - prev.get_start() + carry;
-			weight = curr.vel() / ((curr.octave() < 4)? 1 : curr.octave());
+			weight = curr.vel() / ((curr.octave() < 4)? 1 : 2);
 			if (diff >= TEMPO_MIN_NOTE_RES){
 				tempo_pow2_insert(tempos, diff, weight, TEMPO_CLUSTER_RADIUS, true);
 				carry = 0;
 				window++;
 			} else {
-				carry += diff / 2;
+				carry = diff / 2;
 			}
 			lookbehind -= (double)diff / 1000000;
 		}
@@ -202,8 +275,8 @@ public class Analyzer {
 		}
 		curr_low = curr / 2; curr_hi = curr * 2;
 		/* ignore any obvious aliasing */
-		if (Math.abs(new_tempo-curr_low) < curr_low/32
-				|| Math.abs(new_tempo-curr_hi) < curr_hi/32){
+		if (Math.abs(new_tempo-curr_low) <= curr_low/32
+				|| Math.abs(new_tempo-curr_hi) <= curr_hi/32){
 			new_tempo = curr;
 		}
 		tempo_history.add(new_tempo);

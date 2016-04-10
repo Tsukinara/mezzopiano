@@ -164,8 +164,7 @@ public class NoteBuffer {
 		Chord c = Analyzer.get_chord(rel_buffer, all_buffer, dominant, curr_key, curr_chord);
 		if (c != null) this.curr_chord = c;
 		if (curr_chord != null && !prev_chord.equals(curr_chord.code)) {
-			int maj_min = Analyzer.get_maj_min(chord_history);
-			System.out.println("Mode: " + ((maj_min == 0)? "maj" : "min"));
+			Analyzer.get_mood(this);
 			add_circ_ch(chord_history, curr_chord);
 			add_circ_ln(chord_history_t, timeStamp);
 			parent.s_ac.chord_changed();
